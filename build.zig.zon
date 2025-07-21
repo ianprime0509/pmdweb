@@ -1,0 +1,17 @@
+.{
+    .name = .pmdweb,
+    .version = "0.0.0",
+    .fingerprint = 0x858e9e8934d87130, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.15.0-dev.1173+14bb53320",
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+    .dependencies = .{
+        .ymfm = .{
+            .url = "git+https://github.com/aaronsgiles/ymfm?ref=main#17decfae857b92ab55fbb30ade2287ace095a381",
+            .hash = "N-V-__8AAI9yCQCEboFeBp33TwlMVqPG00Q91PMmTAZHN6zV",
+        },
+    },
+}
