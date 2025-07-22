@@ -106,12 +106,16 @@ class AudioProcessor extends AudioWorkletProcessor {
     }
   }
 
-  handleKeyOn() {
-    this.wasm.exports.keyOn();
+  handleSetNote({ chan, octave, note }) {
+    this.wasm.exports.setNote(chan, octave, note);
   }
 
-  handleKeyOff() {
-    this.wasm.exports.keyOff();
+  handleKeyOn({ chan }) {
+    this.wasm.exports.keyOn(chan);
+  }
+
+  handleKeyOff({ chan }) {
+    this.wasm.exports.keyOff(chan);
   }
 }
 

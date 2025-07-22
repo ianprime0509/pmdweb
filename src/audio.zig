@@ -111,7 +111,7 @@ const fnums: []const u16 = &.{
     0x048F,
 };
 
-fn setNote(chan: u8, octave: u8, note: u8) void {
+export fn setNote(chan: u8, octave: u8, note: u8) void {
     const base: Ym2608.Register = .init(@intCast(chan / 3), chan % 3);
     const block = octave - 1;
     const fnum = fnums[note];
@@ -119,22 +119,12 @@ fn setNote(chan: u8, octave: u8, note: u8) void {
     setRegister(base.offset(0xA0), @intCast(fnum & 0xFF));
 }
 
-export fn keyOn() void {
-    setNote(0, 4, 0);
-    setNote(1, 4, 4);
-    setNote(2, 4, 7);
-    setNote(3, 4, 10);
-    setRegister(.low(0x28), 0xF0);
-    setRegister(.low(0x28), 0xF1);
-    setRegister(.low(0x28), 0xF2);
-    setRegister(.low(0x28), 0xF4);
+export fn keyOn(chan: u8) void {
+    setRegister(.low(0x28), 0xF0 | if (chan >= 3) chan + 1 else chan);
 }
 
-export fn keyOff() void {
-    setRegister(.low(0x28), 0x00);
-    setRegister(.low(0x28), 0x01);
-    setRegister(.low(0x28), 0x02);
-    setRegister(.low(0x28), 0x04);
+export fn keyOff(chan: u8) void {
+    setRegister(.low(0x28), 0x00 | if (chan >= 3) chan + 1 else chan);
 }
 
 var regQueue: [1024]struct { Ym2608.Register, u8 } = undefined;
