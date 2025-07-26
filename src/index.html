@@ -5,11 +5,90 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PMDWeb</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+
+    #instrument-editor {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0 1rem;
+    }
+
+    #algorithm-selection {
+      grid-column: 1 / -2;
+
+      display: flex;
+      flex-direction: row;
+      justify-content: space-around;
+      align-items: center;
+    }
+
+    #algorithm-selection input {
+      appearance: none;
+    }
+
+    #algorithm-selection label {
+      border: 1px solid transparent;
+      padding: 4px;
+    }
+
+    #algorithm-selection input:checked + label {
+      border: 1px solid blue;
+    }
+
+    #algorithm-selection svg {
+      user-select: none;
+    }
+
+    .control-container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .algorithm-box {
+      fill: none;
+      stroke: black;
+      stroke-width: 1;
+    }
+
+    .algorithm-line {
+      fill: none;
+      stroke: black;
+      stroke-width: 1;
+    }
+
+    .algorithm-label-text {
+      font-family: monospace;
+      font-size: 8px;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      stroke: black;
+    }
+  </style>
 </head>
 
 <body id="body">
-  <button id="button-play">Play</button>
-  <button id="button-stop">Stop</button>
+  <div id="instrument-editor">
+    <div id="algorithm-selection"></div>
+
+    <div>Slot 1</div>
+    <div>Slot 2</div>
+    <div>Slot 3</div>
+    <div>Slot 4</div>
+  </div>
+
   <script type="module" src="index.js"></script>
 </body>
 
