@@ -86,7 +86,10 @@ fn setInstrumentSlot(reg: Ym2608.Register, params: *const [10]u8) void {
     const tl = params[5] & 0x7F;
     const ks = params[6] & 0x3;
     const ml = params[7] & 0xF;
-    const dt = params[8] & 0x7;
+    const dt = if (params[8] & 0xF0 != 0)
+        (@as(u8, @bitCast(-@as(i8, @bitCast(params[8])))) & 0x3) | 0x4
+    else
+        params[8] & 0x7;
     const am = params[9] & 0x1;
     setRegister(reg, (dt << 4) | ml); // DT/MULTI
     setRegister(reg.offset(0x10), tl); // TL

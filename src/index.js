@@ -1,14 +1,14 @@
 const instrumentParams = [
-  { name: "AR", min: 0, max: 31 },
-  { name: "DR", min: 0, max: 31 },
-  { name: "SR", min: 0, max: 31 },
-  { name: "RR", min: 0, max: 15 },
-  { name: "SL", min: 0, max: 15 },
-  { name: "TL", min: 0, max: 127 },
-  { name: "KS", min: 0, max: 3 },
-  { name: "ML", min: 0, max: 15 },
-  { name: "DT", min: -3, max: 3 },
-  { name: "AM", min: 0, max: 1 },
+  { name: "AR", desc: "Attack Rate", min: 0, max: 31 },
+  { name: "DR", desc: "Decay Rate", min: 0, max: 31 },
+  { name: "SR", desc: "Sustain Rate", min: 0, max: 31 },
+  { name: "RR", desc: "Release Rate", min: 0, max: 15 },
+  { name: "SL", desc: "Sustain Level", min: 0, max: 15 },
+  { name: "TL", desc: "Total Level", min: 0, max: 127 },
+  { name: "KS", desc: "Key Scale", min: 0, max: 3 },
+  { name: "ML", desc: "Multiple", min: 0, max: 15 },
+  { name: "DT", desc: "Detune", min: -3, max: 3 },
+  { name: "AM", desc: "Amplitude Modulation", min: 0, max: 1 },
 ];
 
 const algorithms = [
@@ -42,23 +42,20 @@ const audioNode = new AudioWorkletNode(audioContext, "audio-processor", {
 });
 audioNode.connect(audioContext.destination);
 
-const updateInstrument = () => audioNode.port.postMessage({
-  cmd: "instrumentSet",
-  args: { params: instrument },
-});
+const updateSlotAdsr = [() => {}, () => {}, () => {}, () => {}];
+const updateInstrument = () => {
+  updateSlotAdsr.forEach((func) => func());
+  audioNode.port.postMessage({
+    cmd: "instrumentSet",
+    args: { params: instrument },
+  });
+};
+
+const svgNs = "http://www.w3.org/2000/svg";
 
 const elemAlgorithmSelection = document.getElementById("algorithm-selection");
 for (const [n, alg] of algorithms.entries()) {
-  const id = `algorithm-${n}`;
-  const input = document.createElement("input");
-  input.id = id;
-  input.type = "radio";
-  input.name = "algorithm";
-  if (n === instrument[0]) input.checked = true;
-  elemAlgorithmSelection.append(input);
-
-  const ns = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(ns, "svg");
+  const svg = document.createElementNS(svgNs, "svg");
   const width = 100;
   const height = 100;
   const margin = 3;
@@ -68,7 +65,7 @@ for (const [n, alg] of algorithms.entries()) {
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
   const addText = (x, y, text) => {
-    const elem = document.createElementNS(ns, "text");
+    const elem = document.createElementNS(svgNs, "text");
     elem.innerText = text;
     elem.setAttribute("x", x);
     elem.setAttribute("y", y);
@@ -78,7 +75,7 @@ for (const [n, alg] of algorithms.entries()) {
   };
 
   const addBox = (x, y) => {
-    const elem = document.createElementNS(ns, "rect");
+    const elem = document.createElementNS(svgNs, "rect");
     elem.setAttribute("x", x - boxSize / 2);
     elem.setAttribute("y", y - boxSize / 2);
     elem.setAttribute("width", boxSize);
@@ -88,7 +85,7 @@ for (const [n, alg] of algorithms.entries()) {
   };
 
   const addPath = (path) => {
-    const elem = document.createElementNS(ns, "path");
+    const elem = document.createElementNS(svgNs, "path");
     elem.setAttribute("d", path);
     elem.setAttribute("class", "algorithm-line");
     svg.append(elem);
@@ -130,10 +127,23 @@ for (const [n, alg] of algorithms.entries()) {
     x += deltaX;
   }
 
+  const container = document.createElement("div");
+  container.classList.add("control-container");
+
+  const id = `algorithm-${n}`;
+  const input = document.createElement("input");
+  input.id = id;
+  input.type = "radio";
+  input.name = "algorithm";
+  if (n === instrument[0]) input.checked = true;
+  container.append(input);
+
   const label = document.createElement("label");
   label.htmlFor = id;
   label.append(svg);
-  elemAlgorithmSelection.append(label);
+  container.append(label);
+
+  elemAlgorithmSelection.append(container);
 
   input.addEventListener("input", () => {
     if (input.checked) {
@@ -143,66 +153,122 @@ for (const [n, alg] of algorithms.entries()) {
   });
 }
 
-(() => {
-  const valueIndex = 1;
+elemAlgorithmSelection.insertAdjacentElement("afterend", parameterControl({
+  id: "feedback",
+  name: "FB",
+  desc: "Feedback",
+  index: 1,
+  min: 0,
+  max: 7,
+}));
+
+const elemInstrumentEditor = document.getElementById("instrument-editor");
+
+for (let slotIndex = 0; slotIndex < 4; slotIndex++) {
+  const svg = document.createElementNS(svgNs, "svg");
+  const width = 160;
+  const height = 100;
+  svg.setAttribute("width", width);
+  svg.setAttribute("height", height);
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+  updateSlotAdsr[slotIndex] = () => {
+    svg.replaceChildren();
+
+    const params = instrument.slice(2 + 10 * slotIndex);
+    const ar = params[0] / 31;
+    const dr = params[1] / 31;
+    const sr = params[2] / 31;
+    const rr = params[3] / 15;
+    const sl = params[4] / 15;
+    const tl = params[5] / 127;
+    const releaseX = width * 4 / 5;
+    let [x, y] = [0, height];
+    const d = [`M${x},${y}`];
+    let maxX = releaseX;
+    const to = (x2, y2) => {
+      x = Math.min(x2, maxX);
+      y = Math.min(y2, height);
+      d.push(`L${x},${y}`);
+    };
+    (() => {
+      if (ar === 0) return to(width, y);
+      to(x + width / ar / 32, height * tl);
+      if (dr === 0) return to(width, y);
+      to(x + width / dr / 32, y + (height - y) * sl);
+      if (sr === 0) return to(width, y);
+      to(maxX, y + (maxX - x) * sr, height);
+    })();
+    maxX = width;
+    if (rr !== 0) to(x + width / rr / 32, height);
+    to(width, y);
+
+    const path = document.createElementNS(svgNs, "path");
+    path.setAttribute("class", "algorithm-line");
+    path.setAttribute("d", d.join(" "));
+    svg.append(path);
+
+    const rline = document.createElementNS(svgNs, "line");
+    rline.setAttribute("x1", releaseX);
+    rline.setAttribute("y1", 0);
+    rline.setAttribute("x2", releaseX);
+    rline.setAttribute("y2", height);
+    rline.setAttribute("class", "algorithm-line");
+    rline.setAttribute("stroke-dasharray", "5");
+    svg.append(rline);
+  };
+
+  elemInstrumentEditor.append(svg);
+}
+
+for (const [paramIndex, param] of instrumentParams.entries()) {
+  for (let slotIndex = 0; slotIndex < 4; slotIndex++) {
+    const id = `slot-${slotIndex}-${param.name}`;
+    const index = 2 + 10 * slotIndex + paramIndex;
+    elemInstrumentEditor.append(parameterControl({
+      id,
+      index,
+      ...param,
+    }));
+  }
+}
+
+function parameterControl({
+  id,
+  name,
+  desc,
+  index,
+  min,
+  max,
+}) {
   const control = document.createElement("div");
   control.classList.add("control-container");
-  const id = "feedback";
   const label = document.createElement("label");
-  label.innerText = "FB";
+  const labelText = document.createElement("abbr");
+  labelText.innerText = name;
+  labelText.title = desc;
+  label.append(labelText);
   label.htmlFor = id;
   control.append(label);
   const input = document.createElement("input");
   input.id = id;
   input.type = "range";
-  input.min = 0;
-  input.max = 7;
-  input.value = instrument[valueIndex];
+  input.min = min;
+  input.max = max;
+  input.value = instrument[index];
   control.append(input);
   const output = document.createElement("output");
-  output.innerText = instrument[valueIndex];
+  output.innerText = instrument[index];
   output.htmlFor = id;
   control.append(output);
-  elemAlgorithmSelection.insertAdjacentElement("afterend", control);
 
   input.addEventListener("input", () => {
     output.innerText = input.value;
-    instrument[valueIndex] = input.valueAsNumber;
+    instrument[index] = input.valueAsNumber;
     updateInstrument();
   });
-})();
 
-const elemInstrumentEditor = document.getElementById("instrument-editor");
-
-for (const [paramIndex, param] of instrumentParams.entries()) {
-  for (let slotIndex = 0; slotIndex < 4; slotIndex++) {
-    const valueIndex = 2 + 10 * slotIndex + paramIndex;
-    const control = document.createElement("div");
-    control.classList.add("control-container");
-    const id = `slot-${slotIndex}-${param.name}`;
-    const label = document.createElement("label");
-    label.innerText = param.name;
-    label.htmlFor = id;
-    control.append(label);
-    const input = document.createElement("input");
-    input.id = id;
-    input.type = "range";
-    input.min = param.min;
-    input.max = param.max;
-    input.value = instrument[valueIndex];
-    control.append(input);
-    const output = document.createElement("output");
-    output.innerText = instrument[valueIndex];
-    output.htmlFor = id;
-    control.append(output);
-    elemInstrumentEditor.append(control);
-
-    input.addEventListener("input", () => {
-      output.innerText = input.value;
-      instrument[valueIndex] = input.valueAsNumber;
-      updateInstrument();
-    });
-  }
+  return control;
 }
 
 const notes = {

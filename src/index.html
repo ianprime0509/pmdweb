@@ -10,27 +10,34 @@
       box-sizing: border-box;
     }
 
+    html {
+      width: 100%;
+      height: 100%;
+    }
+
     body {
       display: flex;
       align-items: center;
       justify-content: center;
       width: 100%;
       height: 100%;
+
+      font-family: monospace;
     }
 
     #instrument-editor {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 0 1rem;
+      justify-items: center;
     }
 
     #algorithm-selection {
       grid-column: 1 / -2;
 
-      display: flex;
-      flex-direction: row;
-      justify-content: space-around;
-      align-items: center;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      width: 100%;
     }
 
     #algorithm-selection input {
@@ -50,11 +57,22 @@
       user-select: none;
     }
 
+    .slot-heading {
+      font-size: larger;
+      text-align: center;
+    }
+
     .control-container {
       display: flex;
       flex-direction: row;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
+      gap: 1ch;
+    }
+
+    .control-container output {
+      text-align: end;
+      min-width: 3ch;
     }
 
     .algorithm-box {
@@ -83,10 +101,10 @@
   <div id="instrument-editor">
     <div id="algorithm-selection"></div>
 
-    <div>Slot 1</div>
-    <div>Slot 2</div>
-    <div>Slot 3</div>
-    <div>Slot 4</div>
+    <div class="slot-heading">Slot 1</div>
+    <div class="slot-heading">Slot 2</div>
+    <div class="slot-heading">Slot 3</div>
+    <div class="slot-heading">Slot 4</div>
   </div>
 
   <script type="module" src="index.js"></script>
