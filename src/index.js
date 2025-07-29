@@ -42,9 +42,18 @@ const audioNode = new AudioWorkletNode(audioContext, "audio-processor", {
 });
 audioNode.connect(audioContext.destination);
 
+const elemInstrumentMml = document.createElement("textarea");
+elemInstrumentMml.id = "instrument-mml";
+elemInstrumentMml.disabled = true;
+
 const updateSlotAdsr = [() => {}, () => {}, () => {}, () => {}];
 const updateInstrument = () => {
   updateSlotAdsr.forEach((func) => func());
+  const mmlLines = [`@0 ${instrument[0]} ${instrument[1]}`];
+  for (let i = 0; i < 4; i++) {
+    mmlLines.push(" " + instrument.slice(2 + 10 * i).slice(0, 10).map((n) => String(n).padStart(3, " ")).join(" "));
+  }
+  elemInstrumentMml.textContent = mmlLines.join("\n");
   audioNode.port.postMessage({
     cmd: "instrumentSet",
     args: { params: instrument },
@@ -66,11 +75,10 @@ for (const [n, alg] of algorithms.entries()) {
 
   const addText = (x, y, text) => {
     const elem = document.createElementNS(svgNs, "text");
-    elem.innerText = text;
     elem.setAttribute("x", x);
     elem.setAttribute("y", y);
     elem.setAttribute("class", "algorithm-label-text");
-    elem.append(text);
+    elem.textContent = text;
     svg.append(elem);
   };
 
@@ -245,7 +253,7 @@ function parameterControl({
   control.classList.add("control-container");
   const label = document.createElement("label");
   const labelText = document.createElement("abbr");
-  labelText.innerText = name;
+  labelText.textContent = name;
   labelText.title = desc;
   label.append(labelText);
   label.htmlFor = id;
@@ -258,18 +266,20 @@ function parameterControl({
   input.value = instrument[index];
   control.append(input);
   const output = document.createElement("output");
-  output.innerText = instrument[index];
+  output.textContent = instrument[index];
   output.htmlFor = id;
   control.append(output);
 
   input.addEventListener("input", () => {
-    output.innerText = input.value;
+    output.textContent = input.value;
     instrument[index] = input.valueAsNumber;
     updateInstrument();
   });
 
   return control;
 }
+
+elemInstrumentEditor.append(elemInstrumentMml);
 
 const notes = {
   KeyZ:      [3,  0],
