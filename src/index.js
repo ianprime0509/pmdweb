@@ -27,6 +27,7 @@ const instrument = `4   7
   31  15   0   8  15  30   0  12   3   0
   31   6   0   1  11  33   0   1   3   0
   31   8   0   9  15   0   0   1   3   0`.split(/\s+/g).map((n) => Number.parseInt(n, 10));
+let instrumentName = "EPIANO2";
 
 const audioContext = new AudioContext({
   sampleRate: 44_100,
@@ -48,8 +49,13 @@ elemInstrumentMml.disabled = true;
 
 const updateSlotAdsr = [() => {}, () => {}, () => {}, () => {}];
 const updateInstrument = () => {
+  window.addEventListener("beforeunload", (e) => e.preventDefault());
+
   updateSlotAdsr.forEach((func) => func());
   const mmlLines = [`@0 ${instrument[0]} ${instrument[1]}`];
+  if (instrumentName !== "") {
+    mmlLines[0] += ` =${instrumentName}`;
+  }
   for (let i = 0; i < 4; i++) {
     mmlLines.push(" " + instrument.slice(2 + 10 * i).slice(0, 10).map((n) => String(n).padStart(3, " ")).join(" "));
   }
@@ -62,7 +68,10 @@ const updateInstrument = () => {
 
 const svgNs = "http://www.w3.org/2000/svg";
 
-const elemAlgorithmSelection = document.getElementById("algorithm-selection");
+const elemInstrumentEditor = document.getElementById("instrument-editor");
+
+const elemAlgorithmSelection = document.createElement("div");
+elemAlgorithmSelection.id = "algorithm-selection";
 for (const [n, alg] of algorithms.entries()) {
   const svg = document.createElementNS(svgNs, "svg");
   const width = 100;
@@ -160,8 +169,28 @@ for (const [n, alg] of algorithms.entries()) {
     }
   });
 }
+elemInstrumentEditor.append(elemAlgorithmSelection);
 
-elemAlgorithmSelection.insertAdjacentElement("afterend", parameterControl({
+{
+  const nameContainer = document.createElement("div");
+  nameContainer.classList.add("control-container");
+  const nameLabel = document.createElement("label");
+  nameLabel.textContent = "Name";
+  nameLabel.htmlFor = "name-input";
+  nameContainer.append(nameLabel);
+  const nameInput = document.createElement("input");
+  nameInput.id = "name-input";
+  nameInput.type = "text";
+  nameInput.value = instrumentName;
+  nameInput.addEventListener("input", () => {
+    instrumentName = nameInput.value;
+    updateInstrument();
+  });
+  nameContainer.append(nameInput);
+  elemInstrumentEditor.append(nameContainer);
+}
+
+elemInstrumentEditor.append(parameterControl({
   id: "feedback",
   name: "FB",
   desc: "Feedback",
@@ -170,7 +199,12 @@ elemAlgorithmSelection.insertAdjacentElement("afterend", parameterControl({
   max: 7,
 }));
 
-const elemInstrumentEditor = document.getElementById("instrument-editor");
+for (let slot = 1; slot <= 4; slot++) {
+  const heading = document.createElement("div");
+  heading.class = "slot-heading";
+  heading.textContent = `Slot ${slot}`;
+  elemInstrumentEditor.append(heading);
+}
 
 for (let slotIndex = 0; slotIndex < 4; slotIndex++) {
   const svg = document.createElementNS(svgNs, "svg");
