@@ -57,7 +57,12 @@ pub fn build(b: *std.Build) void {
     audio_wasm_exe.wasi_exec_model = .reactor;
     audio_wasm_exe.rdynamic = true;
 
-    const static_files: []const []const u8 = &.{ "audio.js", "index.html", "index.js" };
+    const static_files: []const []const u8 = &.{
+        "audio.js",
+        "index.html",
+        "index.js",
+        "instrument-editor.js",
+    };
     const ui_dir: std.Build.InstallDir = .{ .custom = "ui" };
     for (static_files) |static_file| {
         b.getInstallStep().dependOn(&b.addInstallFileWithDir(

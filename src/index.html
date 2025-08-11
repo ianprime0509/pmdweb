@@ -17,96 +17,14 @@
 
       font-family: monospace;
     }
-
-    input[type=text] {
-      font-family: monospace;
-    }
-
-    #instrument-editor {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0 1rem;
-      justify-items: center;
-    }
-
-    #algorithm-selection {
-      grid-column: 1 / -2;
-      grid-row: 1 / span 2;
-
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      width: 100%;
-    }
-
-    #algorithm-selection input {
-      appearance: none;
-    }
-
-    #algorithm-selection label {
-      border: 1px solid transparent;
-      padding: 4px;
-    }
-
-    #algorithm-selection input:checked + label {
-      border: 1px solid blue;
-    }
-
-    #algorithm-selection svg {
-      user-select: none;
-    }
-
-    .slot-heading {
-      font-size: larger;
-      text-align: center;
-    }
-
-    .control-container {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: center;
-      gap: 1ch;
-    }
-
-    .control-container output {
-      text-align: end;
-      min-width: 3ch;
-    }
-
-    .algorithm-box {
-      fill: none;
-      stroke: black;
-      stroke-width: 1;
-    }
-
-    .algorithm-line {
-      fill: none;
-      stroke: black;
-      stroke-width: 1;
-    }
-
-    .algorithm-label-text {
-      font-family: monospace;
-      font-size: 8px;
-      text-anchor: middle;
-      dominant-baseline: middle;
-      stroke: black;
-    }
-
-    #instrument-mml {
-      grid-column: 1 / -1;
-      width: 100%;
-      height: 10rem;
-      resize: none;
-      white-space: pre;
-    }
   </style>
 </head>
 
 <body id="body">
-  <div id="instrument-editor"></div>
+  <instrument-editor id="instrument-editor"></instrument-editor>
 
   <script type="module" src="index.js"></script>
+  <script type="module" src="instrument-editor.js"></script>
 </body>
 
 </html>
