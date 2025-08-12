@@ -367,26 +367,21 @@ class InstrumentEditor extends HTMLElement {
       const rr = params[3] / 15;
       const sl = params[4] / 15;
       const tl = params[5] / 127;
-      const releaseX = width * 4 / 5;
       let [x, y] = [0, height];
       const d = [`M${x},${y}`];
-      let maxX = releaseX;
       const to = (x2, y2) => {
-        x = Math.min(x2, maxX);
-        y = Math.min(y2, height);
+        x = x2;
+        y = y2;
         d.push(`L${x},${y}`);
       };
       (() => {
         if (ar === 0) return to(width, y);
-        to(x + width / ar / 32, height * tl);
+        to(x + width / ar / 31, height * tl);
         if (dr === 0) return to(width, y);
-        to(x + width / dr / 32, y + (height - y) * sl);
+        to(x + width / dr / 31, y + (height - y) * sl);
         if (sr === 0) return to(width, y);
-        to(maxX, y + (maxX - x) * sr, height);
+        to(width, y + (width - x) * sr, height);
       })();
-      maxX = width;
-      if (rr !== 0) to(x + width / rr / 32, height);
-      to(width, y);
 
       const path = document.createElementNS(svgNs, "path");
       path.setAttribute("class", "algorithm-line");
@@ -394,10 +389,16 @@ class InstrumentEditor extends HTMLElement {
       svg.append(path);
 
       const rline = document.createElementNS(svgNs, "line");
-      rline.setAttribute("x1", releaseX);
-      rline.setAttribute("y1", 0);
-      rline.setAttribute("x2", releaseX);
-      rline.setAttribute("y2", height);
+      const tlY = ar !== 0 ? height * tl : height;
+      rline.setAttribute("x1", 0);
+      rline.setAttribute("y1", tlY);
+      if (rr !== 0) {
+        rline.setAttribute("x2", width / rr / 15);
+        rline.setAttribute("y2", height);
+      } else {
+        rline.setAttribute("x2", width);
+        rline.setAttribute("y2", tlY);
+      }
       rline.setAttribute("class", "algorithm-line");
       rline.setAttribute("stroke-dasharray", "5");
       svg.append(rline);
