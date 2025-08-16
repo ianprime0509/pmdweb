@@ -110,3 +110,89 @@ document.getElementById("body").addEventListener("keyup", (e) => {
     args: { chan },
   });
 });
+
+const ffFileInput = document.getElementById("ff-file");
+ffFileInput.value = "";
+const ffInstrumentsList = document.getElementById("ff-instruments");
+const instruments = [];
+ffFileInput.addEventListener("input", async () => {
+  const file = ffFileInput.files[0];
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  if (bytes.length % 32 !== 0) {
+    console.error("invalid bank file");
+    return;
+  }
+
+  ffInstrumentsList.replaceChildren();
+  instruments.splice(0, instruments.length);
+  for (let i = 0; i < bytes.length; i += 32) {
+    const instrument = parseInstrument(bytes.slice(i, i + 32));
+    instruments.push(instrument);
+
+    const option = document.createElement("option");
+    option.textContent = instrument.name;
+    ffInstrumentsList.append(option);
+  }
+});
+ffInstrumentsList.addEventListener("input", () => {
+  const instrument = instruments[ffInstrumentsList.selectedIndex];
+  instrumentEditor.update(instrument);
+});
+
+const nameDecoder = new TextDecoder("Shift_JIS");
+function parseInstrument(raw) {
+  let nameEnd = 25;
+  for (; nameEnd < raw.length && raw[nameEnd] !== 0; nameEnd++) ;
+  const name = nameDecoder.decode(raw.slice(25, nameEnd));
+
+  const data = new Array(42);
+  const fbAlg = raw[24];
+  data[0] = fbAlg & 7; // algorithm
+  data[1] = (fbAlg >> 3) & 7; // FB
+  const slots = [0, 2, 1, 3]; // slot registers are ordered 1, 3, 2, 4
+  // DT/MULTI
+  for (let i = 0; i < 4; i++) {
+    const slot = slots[i];
+    const dtMulti = raw[i];
+    data[2 + 10 * slot + 7] = dtMulti & 0xF; // MULTI
+    let dt = (dtMulti >> 4) & 0xF;
+    if (dt & 0x8 !== 0) dt = -(dt & 0x3);
+    data[2 + 10 * slot + 8] = dt; // DT
+  }
+  // TL
+  for (let i = 0; i < 4; i++) {
+    const slot = slots[i];
+    const tl = raw[4 + i];
+    data[2 + 10 * slot + 5] = tl & 0x7F; // TL
+  }
+  // KS/AR
+  for (let i = 0; i < 4; i++) {
+    const slot = slots[i];
+    const ksAr = raw[8 + i];
+    data[2 + 10 * slot + 6] = (ksAr >> 6) & 0x3; // KS
+    data[2 + 10 * slot + 0] = ksAr & 0x1F; // AR
+  }
+  // AM/DR
+  for (let i = 0; i < 4; i++) {
+    const slot = slots[i];
+    const amDr = raw[12 + i];
+    data[2 + 10 * slot + 9] = (amDr >> 7) & 0x1; // AM
+    data[2 + 10 * slot + 1] = amDr & 0x1F; // DR
+  }
+  // SR
+  for (let i = 0; i < 4; i++) {
+    const slot = slots[i];
+    const sr = raw[16 + i];
+    data[2 + 10 * slot + 2] = sr & 0x1F; // SR
+  }
+  // SL/RR
+  for (let i = 0; i < 4; i++) {
+    const slot = slots[i];
+    const slRr = raw[20 + i];
+    data[2 + 10 * slot + 4] = (slRr >> 4) & 0xF; // SL
+    data[2 + 10 * slot + 3] = slRr & 0xF; // RR
+  }
+
+  return { name, data };
+}

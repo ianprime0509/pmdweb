@@ -46,6 +46,7 @@ class InstrumentEditor extends HTMLElement {
   #name = "EPIANO2";
   #updateSlotAdsr = [];
   #updateMml;
+  #externalUpdateHandlers = [];
 
   constructor() {
     super();
@@ -53,6 +54,13 @@ class InstrumentEditor extends HTMLElement {
 
   get data() {
     return structuredClone(this.#data);
+  }
+
+  update({ name, data }) {
+    this.#name = name;
+    this.#data = data;
+    this.#externalUpdateHandlers.forEach((handler) => handler());
+    this.#updateInstrument();
   }
 
   connectedCallback() {
@@ -138,7 +146,8 @@ class InstrumentEditor extends HTMLElement {
       #mml {
         grid-column: 1 / -1;
         width: 100%;
-        height: 10rem;
+        height: 6rem;
+        margin-top: 0.5rem;
         resize: none;
         white-space: pre;
       }
@@ -273,6 +282,9 @@ class InstrumentEditor extends HTMLElement {
           this.#updateInstrument();
         }
       });
+      this.#externalUpdateHandlers.push(() => {
+        input.checked = this.#data[0] === n;
+      });
       container.append(input);
 
       const label = document.createElement("label");
@@ -300,6 +312,7 @@ class InstrumentEditor extends HTMLElement {
       this.#name = input.value;
       this.#updateInstrument();
     });
+    this.#externalUpdateHandlers.push(() => input.value = this.#name);
     container.append(input);
     return container;
   }
@@ -337,6 +350,12 @@ class InstrumentEditor extends HTMLElement {
       output.textContent = input.value;
       this.#data[index] = input.valueAsNumber;
       this.#updateInstrument();
+    });
+    this.#externalUpdateHandlers.push(() => {
+      let value = this.#data[index];
+      if (min < 0 && (value & 0x80) !== 0) value = -(~value + 1);
+      input.value = value;
+      output.textContent = value;
     });
 
     return control;

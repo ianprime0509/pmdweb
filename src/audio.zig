@@ -67,8 +67,8 @@ var rng: std.Random.DefaultPrng = .init(0);
 export fn setInstrument(chan: u8) void {
     const base: Ym2608.Register = .init(@intCast(chan / 3), chan % 3);
 
-    const alg = instrument_buffer[0] & 7;
-    const fb = instrument_buffer[1] & 7;
+    const alg = instrument_buffer[0] & 0x7;
+    const fb = instrument_buffer[1] & 0x7;
     setRegister(base.offset(0xB0), (fb << 3) | alg); // FB/Algorithm
     const params = instrument_buffer[2..];
     setInstrumentSlot(base.offset(0x30), params[0..10]);

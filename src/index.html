@@ -17,11 +17,50 @@
 
       font-family: monospace;
     }
+
+    main {
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    #bank-browser {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: start;
+      gap: 0.5rem;
+    }
+
+    .control-container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 1ch;
+    }
+
+    #ff-instruments {
+      width: 100%;
+      flex: auto;
+    }
   </style>
 </head>
 
 <body id="body">
-  <instrument-editor id="instrument-editor"></instrument-editor>
+  <main>
+    <instrument-editor id="instrument-editor"></instrument-editor>
+    <div id="bank-browser">
+      <div class="control-container">
+        <label for="ff-file">Bank file:</label>
+        <input type="file" id="ff-file" accept=".ff">
+      </div>
+      <select id="ff-instruments" size="2">
+      </select>
+    </div>
+  </main>
 
   <script type="module" src="index.js"></script>
   <script type="module" src="instrument-editor.js"></script>
