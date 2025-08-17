@@ -12,8 +12,7 @@ concurrency:
 jobs:
   build-site:
     runs-on: ubuntu-latest
-    # TODO: wait until master tarballs work again
-    if: false && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
