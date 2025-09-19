@@ -25,7 +25,7 @@ extern "C" ym2608 *ym2608_new() {
     }
 }
 
-extern "C" ym2608 ym2608_delete(ym2608 *chip) {
+extern "C" void ym2608_delete(ym2608 *chip) {
     delete chip;
 }
 
